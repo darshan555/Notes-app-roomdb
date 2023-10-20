@@ -2,13 +2,13 @@ package com.example.notes_app_roomdb
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
-import android.widget.Toast
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProvider
@@ -19,7 +19,7 @@ import com.example.notes_app_roomdb.database.NoteDatabase
 import com.example.notes_app_roomdb.databinding.ActivityMainBinding
 import com.example.notes_app_roomdb.models.NoteViewModel
 
-class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapter.OnItemLongClickListener {
+class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener{
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var database: NoteDatabase
@@ -36,8 +36,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         initUI()
         binding.searchBar.visibility = View.INVISIBLE
         binding.searchBTN.visibility = View.VISIBLE
-
-        binding.searchBTN.setOnClickListener {
+        fun toggleSearchVisibility() {
             searchVisible = !searchVisible
             if (searchVisible) {
                 binding.searchBar.visibility = View.VISIBLE
@@ -45,9 +44,14 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
                 binding.searchBar.isIconified = false
             } else {
                 binding.searchBar.visibility = View.INVISIBLE
+                binding.searchBar.setQuery("", false)
                 binding.searchBTN.visibility = View.VISIBLE
             }
         }
+        binding.searchBTN.setOnClickListener {
+            toggleSearchVisibility()
+        }
+
 
         binding.constraintLayout.setOnTouchListener { _, event ->
             if (searchVisible && event.action == MotionEvent.ACTION_DOWN) {
@@ -58,17 +62,14 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
                 val searchBarX = location[0]
                 val searchBarY = location[1]
                 if (x < searchBarX || x > searchBarX + binding.searchBar.width || y < searchBarY || y > searchBarY + binding.searchBar.height) {
-                    binding.searchBar.visibility = View.INVISIBLE
-                    binding.searchBar.setQuery("", false)
-                    binding.searchBTN.visibility = View.VISIBLE
-                    searchVisible = false
+                    toggleSearchVisibility()
                 }
             }
             false
         }
 
 
-        binding.searchBar.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
+        binding.searchBar.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 return false
             }
@@ -78,6 +79,16 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
                 return true
             }
         })
+
+        binding.searchBar.setOnCloseListener {
+            val inputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputMethodManager.hideSoftInputFromWindow(binding.searchBar.windowToken, 0)
+
+            binding.searchBar.clearFocus()
+            binding.searchBar.setQuery("", false)
+            toggleSearchVisibility()
+            true
+        }
 
         viewModel = ViewModelProvider(
             this,
@@ -105,14 +116,13 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
                     adapter.updateList(filteredList)
                 }
             }
-
         }
     }
 
     private fun initUI() {
         binding.listRecView.setHasFixedSize(true)
         binding.listRecView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        adapter = NoteAdapter(this,this,this)
+        adapter = NoteAdapter(this,this)
         binding.listRecView.adapter = adapter
 
         val getContent =
@@ -135,32 +145,17 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
             if (result.resultCode == Activity.RESULT_OK) {
                 val note = result.data?.getSerializableExtra("note") as Note
                 val isDelete = result.data?.getBooleanExtra("delete_note", false) as Boolean
-                if (!isDelete) {
-                    viewModel.updateNote(note)
-                }else if(isDelete){
+                if (isDelete) {
                     viewModel.deleteNote(note)
+                }else {
+                    viewModel.updateNote(note)
                 }
             }
         }
     override fun onItemClicked(note: Note) {
             val intent = Intent(this@MainActivity, AddNoteActivity::class.java)
             intent.putExtra("current_note", note)
-            updateOrDeleteNote.launch(intent)
-    }
-
-    override fun onItemLongClicked(note: Note) {
-        val builder : AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
-        builder
-            .setMessage("Are you sure you want to delete this note")
-            .setTitle("Delete")
-            .setPositiveButton("Yes"){dialog,which ->
-                viewModel.deleteNote(note)
-                Toast.makeText(this, "Delete Successfully", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("No") { dialog, which ->
-            }
-        val dialog: AlertDialog = builder.create()
-        dialog.show()
+        updateOrDeleteNote.launch(intent)
     }
 
 }
