@@ -1,0 +1,16 @@
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+    <item android:drawable="@drawable/add_button_shape" />
+
+    <item
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_gravity="center"
+        android:drawable="@drawable/add"
+        android:left="15dp"
+        android:top="15dp"
+        android:bottom="15dp"
+        android:right="15dp"
+        />
+</layer-list>

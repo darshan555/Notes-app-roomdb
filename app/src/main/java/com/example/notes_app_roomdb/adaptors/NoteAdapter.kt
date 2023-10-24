@@ -1,77 +1,111 @@
 package com.example.notes_app_roomdb.adaptors
 
 import android.content.Context
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
-import androidx.cardview.widget.CardView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.example.notes_app_roomdb.R
 import com.example.notes_app_roomdb.database.Note
+import com.example.notes_app_roomdb.databinding.ListItemBinding
+import java.util.Random
 
-class NoteAdapter(private val context: Context, private val listener: NoteClickListener ):
-    RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
+class NoteAdapter(
+    private val context: Context,
+    private val listener: NoteClickListener,
+    private val deleteIconChangeCallback : DeleteIconChange,
+    private val listener1 :(Note)->Unit
+) :
+    RecyclerView.Adapter<NoteAdapter.ViewHolder>() {
 
     private val noteList = ArrayList<Note>()
-    private val selectedNotes: MutableList<Note> = mutableListOf()
+    val selectedNotes = HashSet<Note>()
+    var isLongClick = false
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): NoteAdapter.NoteViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 
-        return NoteViewHolder(LayoutInflater.from(context).inflate(R.layout.list_item, parent, false))
+        val binding = ListItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+
+        return ViewHolder(binding)
     }
-    override fun onBindViewHolder(holder: NoteAdapter.NoteViewHolder, position: Int) {
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = noteList[position]
-        holder.title.text = item.title
-        holder.title.isSelected = true
-        holder.content.text = item.content
-        holder.date.text = item.date
-        holder.date.isSelected = true
-        holder.notelayout.setOnClickListener {
-            listener.onItemClicked(noteList[holder.adapterPosition])
+
+        holder.binding.titleTV.text = item.title
+        holder.binding.titleTV.isSelected = true
+        holder.binding.contentTV.text = item.content
+        holder.binding.dateTV.text = item.date
+        holder.binding.dateTV.isSelected = true
+
+        if (item.selected) {
+            holder.binding.cardLayout.setBackgroundResource(
+                R.drawable.note_selected_background
+            )
+        }else{
+            holder.binding.cardLayout.setBackgroundResource(
+                R.drawable.note_default_background
+            )
         }
 
-        holder.notelayout.setOnLongClickListener {
-            val selectedNote = noteList[position]
-            val isNoteSelected = selectedNotes.contains(selectedNote)
 
-            if (isNoteSelected) {
-                selectedNotes.remove(selectedNote)
-                holder.notelayout.setCardBackgroundColor(R.drawable.default_color)
+        holder.binding.cardLayout.setOnClickListener {
+            if (isLongClick) {
+                if (selectedNotes.contains(item)) {
+                    selectedNotes.remove(item)
+                    holder.binding.cardLayout.setBackgroundResource(
+                        R.drawable.note_default_background
+                    )
+                    item.selected = false
+                    if (selectedNotes.isEmpty()) {
+                        isLongClick = false
+                        deleteIconChangeCallback.onLongPress(isLongClick)
+                    }
+                    notifyDataSetChanged()
+                } else {
+                    item.selected = true
+                    selectedNotes.add(item)
+                    holder.binding.cardLayout.setBackgroundResource(
+                        R.drawable.note_selected_background
+                    )
+
+                    notifyDataSetChanged()
+                }
             } else {
-                selectedNotes.add(selectedNote)
-                holder.notelayout.setCardBackgroundColor(R.drawable.selected_color)
+                listener1.invoke(noteList[holder.adapterPosition])
             }
+        }
+        holder.binding.cardLayout.setOnLongClickListener {
+            item.selected = true
+            selectedNotes.add(item)
+            isLongClick = true
+            holder.binding.cardLayout.setBackgroundResource(
+                R.drawable.note_selected_background
+            )
+            deleteIconChangeCallback.onLongPress(isLongClick)
+            notifyDataSetChanged()
             true
         }
-
     }
 
     override fun getItemCount(): Int {
         return noteList.size
     }
-    fun updateList(newList: List<Note>){
+
+    fun updateList(newList: List<Note>) {
         noteList.clear()
         noteList.addAll(newList)
         notifyDataSetChanged()
     }
-    inner class NoteViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
-        val notelayout = itemView.findViewById<CardView>(R.id.card_layout)!!
-        val title = itemView.findViewById<TextView>(R.id.titleTV)!!
-        val content = itemView.findViewById<TextView>(R.id.contentTV)!!
-        val date = itemView.findViewById<TextView>(R.id.dateTV)!!
-    }
+
+    inner class ViewHolder(val binding: ListItemBinding) : RecyclerView.ViewHolder(binding.root)
+
     interface NoteClickListener {
         fun onItemClicked(note: Note)
     }
-    fun toggleSelection(note: Note) {
-        if (selectedNotes.contains(note)) {
-            selectedNotes.remove(note)
-        } else {
-            selectedNotes.add(note)
-        }
-        notifyDataSetChanged() // Refresh the UI to reflect selection changes
+    interface DeleteIconChange {
+        fun onLongPress(longPress: Boolean)
     }
-
-
 }

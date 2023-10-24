@@ -2,5 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="your_selected_item_color">#A8A8A8</color>
+    <color name="color1">#2196F3</color>
+    <color name="color2">#CDDC39</color>
+    <color name="color3">#0ED562</color>
+    <color name="color4">#FFEB3B</color>
+    <color name="color5">#93A4FF</color>
+    <color name="color6">#FF9800</color>
+    <color name="nav_color">#222222</color>
+
 </resources>

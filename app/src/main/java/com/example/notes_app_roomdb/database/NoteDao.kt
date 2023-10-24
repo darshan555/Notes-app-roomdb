@@ -11,17 +11,18 @@ import androidx.room.Query
 interface NoteDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(note: Note)
+    fun insert(note: Note)
 
     @Delete
-    suspend fun delete(note: Note)
+    fun delete(note: Note)
 
     @Query("SELECT * FROM notes order by id ASC")
     fun getAllNotes(): LiveData<List<Note>>
 
     @Query("UPDATE notes set title = :title, note = :content where id = :id")
-    suspend fun update(id: Int?, title: String?, content: String?)
+    fun update(id: Int?, title: String?, content: String?)
+    @Query("DELETE FROM notes WHERE id IN (:noteIds)")
+    fun deleteAll(noteIds: List<Int>)
 
-    @Delete
-    suspend fun deleteNotes(notes: List<Note>)
+
 }

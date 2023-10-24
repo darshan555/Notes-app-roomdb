@@ -21,6 +21,7 @@ class AddNoteActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAddNoteBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setNavigationBarColor(R.color.nav_color)
 
         try{
             oldNote = intent.getSerializableExtra("current_note") as Note
@@ -69,5 +70,9 @@ class AddNoteActivity : AppCompatActivity() {
         }
 
 
+    }
+
+    private fun setNavigationBarColor(colorResource: Int) {
+        window.navigationBarColor = resources.getColor(colorResource, theme)
     }
 }

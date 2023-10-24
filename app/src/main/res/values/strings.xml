@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Notes_App_Roomdb</string>
+    <string name="app_head">Notes</string>
 </resources>

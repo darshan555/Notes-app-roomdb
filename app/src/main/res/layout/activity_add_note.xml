@@ -4,49 +4,57 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".AddNoteActivity">
+    tools:context=".AddNoteActivity"
+    android:background="#222222"
+    >
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:background="@color/white"
+        android:background="#222222"
         android:minHeight="?attr/actionBarSize"
         android:theme="?attr/actionBarTheme"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="15dp">
 
-        <RelativeLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-
-            <ImageView
+            <Button
                 android:id="@+id/backBTN"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="8dp"
-                app:srcCompat="@drawable/ic_back_arrow" />
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/back_button_background"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
+            <Button
                 android:id="@+id/saveBTN"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_marginEnd="12dp"
-                android:padding="8dp"
-                app:srcCompat="@drawable/ic_save_arrow" />
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@drawable/save_button_background"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <ImageView
+            <Button
                 android:id="@+id/deleteBTN"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="12dp"
-                android:layout_toLeftOf="@+id/saveBTN"
-                android:padding="8dp"
-                app:srcCompat="@drawable/ic_delete" />
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="24dp"
+                android:background="@drawable/delete_button_background"
+                app:layout_constraintBottom_toBottomOf="@+id/saveBTN"
+                app:layout_constraintEnd_toStartOf="@+id/saveBTN"
+                app:layout_constraintTop_toTopOf="@+id/saveBTN"
+                app:layout_constraintVertical_bias="0.0" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-        </RelativeLayout>
     </androidx.appcompat.widget.Toolbar>
 
     <EditText
@@ -60,6 +68,8 @@
         android:ems="10"
         android:hint="Title"
         android:textSize="26sp"
+        android:textColorHint="@color/white"
+        android:textColor="@color/white"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/toolbar" />
@@ -71,6 +81,8 @@
         android:layout_marginTop="26dp"
         android:background="@null"
         android:ems="10"
+        android:textColorHint="@color/white"
+        android:textColor="@color/white"
         android:gravity="top"
         android:hint="Todo Note"
         android:inputType="textMultiLine"
