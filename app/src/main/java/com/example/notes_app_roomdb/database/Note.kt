@@ -10,6 +10,7 @@ data class Note(
     @ColumnInfo(name = "title")val title:String?,
     @ColumnInfo(name = "note")val content:String?,
     @ColumnInfo(name = "date")val date:String,
-    var selected: Boolean = false
+    var selected: Boolean = false,
+    val isInRecycleBin: Boolean = false
 
 ):java.io.Serializable

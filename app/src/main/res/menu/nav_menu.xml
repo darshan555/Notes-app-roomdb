@@ -14,6 +14,10 @@
             android:id="@+id/nav_about"
             android:icon="@drawable/ic_about"
             android:title="About"/>
+        <item
+            android:id="@+id/nav_recycle_bin"
+            android:icon="@drawable/recycle_bin"
+            android:title="Recycle Bin"/>
 
     </group>
 

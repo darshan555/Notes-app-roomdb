@@ -6,13 +6,17 @@ import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.widget.SearchView
-import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.content.ContextCompat
+import androidx.core.view.GravityCompat
+import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.notes_app_roomdb.adaptors.NoteAdapter
@@ -20,8 +24,9 @@ import com.example.notes_app_roomdb.database.Note
 import com.example.notes_app_roomdb.database.NoteDatabase
 import com.example.notes_app_roomdb.databinding.ActivityMainBinding
 import com.example.notes_app_roomdb.models.NoteViewModel
+import com.google.android.material.navigation.NavigationView
 
-class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapter.DeleteIconChange {
+class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapter.DeleteIconChange, NavigationView.OnNavigationItemSelectedListener {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var database: NoteDatabase
@@ -36,9 +41,23 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         setContentView(binding.root)
         setNavigationBarColor(R.color.nav_color)
 
-        setSupportActionBar(binding.toolbar)
-
+//        setSupportActionBar(binding.toolbar)
+        binding.navView.setNavigationItemSelectedListener(this)
+        val toggle = ActionBarDrawerToggle(this, binding.drawerLayout, R.string.open_nav, R.string.close_nav)
+        binding.drawerLayout.addDrawerListener(toggle)
+        toggle.syncState()
         initUI()
+        binding.navView.setBackgroundColor(ContextCompat.getColor(this,R.color.nav_color))
+
+        binding.drawerBTN.setOnClickListener{v
+            ->
+            if(binding.drawerLayout.isDrawerOpen(GravityCompat.START)){
+                    binding.drawerLayout.closeDrawer(GravityCompat.START)
+            }else{
+                binding.drawerLayout.openDrawer(GravityCompat.START)
+            }
+        }
+
         binding.searchBar.visibility = View.INVISIBLE
         binding.noteTV.visibility = View.VISIBLE
         binding.searchBTN.visibility = View.VISIBLE
@@ -66,7 +85,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
             deleteSelectedNotes()
         }
 
-        binding.constraintLayout.setOnTouchListener { _, event ->
+        binding.drawerLayout.setOnTouchListener { _, event ->
             if (searchVisible && event.action == MotionEvent.ACTION_DOWN) {
                 val location = IntArray(2)
                 binding.searchBar.getLocationOnScreen(location)
@@ -106,12 +125,22 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
             ViewModelProvider.AndroidViewModelFactory.getInstance(application)
         )[NoteViewModel::class.java]
 
-        viewModel.allNote.observe(this){
+        viewModel.filterNote.observe(this){
             list-> list?.let {
                 adapter.updateList(list)
         }
+
         }
         database = NoteDatabase.getDatabase(this)
+
+        viewModel.allNote.observe(this, Observer { notes ->
+            if (notes.isNullOrEmpty()) {
+                binding.noNoteTV.visibility = View.VISIBLE
+                binding.noNoteIMG.visibility = View.VISIBLE
+            } else {
+                binding.noNoteTV.visibility = View.INVISIBLE
+                binding.noNoteIMG.visibility = View.INVISIBLE            }
+        })
 
         onLongPress(adapter.isLongClick)
     }
@@ -119,12 +148,11 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
     private fun deleteSelectedNotes() {
         if(::adapter.isInitialized){
             val selectedNote = ArrayList(adapter.selectedNotes)
-            viewModel.deleteSelectedNotes(selectedNote.map { it.id?:-1 })
+            viewModel.temporaryDelete(selectedNote.map { it.id?:-1 })
             adapter.selectedNotes.clear()
             adapter.notifyDataSetChanged()
             adapter.isLongClick = false
             onLongPress(adapter.isLongClick)
-
         }
     }
 
@@ -199,6 +227,22 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
 
     private fun setNavigationBarColor(colorResource: Int) {
         window.navigationBarColor = resources.getColor(colorResource, theme)
+    }
+
+    override fun onNavigationItemSelected(item: MenuItem): Boolean {
+        when(item.itemId){
+            R.id.nav_home->{
+                Toast.makeText(this, "Home Activity", Toast.LENGTH_SHORT).show()
+            }
+            R.id.nav_about->{
+                Toast.makeText(this, "About", Toast.LENGTH_SHORT).show()
+            }
+            R.id.nav_recycle_bin->{
+                startActivity(Intent(this, RecycleBinActivity::class.java))
+            }
+        }
+        binding.drawerLayout.closeDrawer(GravityCompat.START)
+        return true
     }
 
 

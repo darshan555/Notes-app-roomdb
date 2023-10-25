@@ -13,6 +13,9 @@
         android:theme="@style/Theme.Notes_App_Roomdb"
         tools:targetApi="31">
         <activity
+            android:name=".RecycleBinActivity"
+            android:exported="false" />
+        <activity
             android:name=".AddNoteActivity"
             android:exported="false" />
         <activity

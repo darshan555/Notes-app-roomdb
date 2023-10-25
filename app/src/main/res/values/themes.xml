@@ -1,6 +1,6 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <style name="Base.Theme.Notes_App_Roomdb" parent="Theme.AppCompat.DayNight.NoActionBar">
-
+    <style name="Base.Theme.Notes_App_Roomdb" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/nav_color</item>
     </style>
 
     <style name="Theme.Notes_App_Roomdb" parent="Base.Theme.Notes_App_Roomdb" />

@@ -2,12 +2,12 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="color1">#2196F3</color>
-    <color name="color2">#CDDC39</color>
-    <color name="color3">#0ED562</color>
-    <color name="color4">#FFEB3B</color>
-    <color name="color5">#93A4FF</color>
-    <color name="color6">#FF9800</color>
-    <color name="nav_color">#222222</color>
+    <color name="color1">#FD99FF</color>
+    <color name="color2">#91F48F</color>
+    <color name="color3">#FFF599</color>
+    <color name="color4">#9EFFFF</color>
+    <color name="color5">#B69CFF</color>
+    <color name="color6">#FF9E9E</color>
+    <color name="nav_color">#111</color>
 
 </resources>
