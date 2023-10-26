@@ -76,6 +76,18 @@
                     app:layout_constraintTop_toTopOf="parent"
                     tools:visibility="visible" />
 
+                <Button
+                    android:id="@+id/filterButton"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/filter_button_background"
+                    app:layout_constraintBottom_toBottomOf="@+id/searchBTN"
+                    app:layout_constraintEnd_toStartOf="@+id/searchBTN"
+                    app:layout_constraintTop_toTopOf="@+id/searchBTN"
+                    app:layout_constraintVertical_bias="0.0"
+                    tools:visibility="visible" />
+
                 <ImageView
                     android:id="@+id/drawerBTN"
                     android:layout_width="25dp"

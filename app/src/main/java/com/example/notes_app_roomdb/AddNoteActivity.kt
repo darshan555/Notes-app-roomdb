@@ -1,6 +1,7 @@
 package com.example.notes_app_roomdb
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -38,23 +39,36 @@ class AddNoteActivity : AppCompatActivity() {
             binding.deleteBTN.visibility = View.INVISIBLE
         }
 
-        binding.saveBTN.setOnClickListener{
+        binding.saveBTN.setOnClickListener {
             val title = binding.titleET.text.toString()
             val noteContent = binding.noteET.text.toString()
 
-            if(title.isNotEmpty() && noteContent.isNotEmpty()){
-                val formatter = SimpleDateFormat("EEE, d MMM yyyy HH:mm a")
-                if(isUpdate){
-                    note = Note(oldNote.id, title, noteContent, formatter.format(Date()))
-                }else{
-                    note = Note(null, title, noteContent, formatter.format(Date()))
+            if (title.isNotEmpty() && noteContent.isNotEmpty()) {
+                val formatter = SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss a")
+                val currentDate = formatter.format(Date())
+
+                val sharedPreferences = getSharedPreferences("NoteColorPrefs", Context.MODE_PRIVATE)
+                var colorPosition = sharedPreferences.getInt("colorPosition", 1)
+
+                if (isUpdate) {
+                    note = Note(oldNote.id, title, noteContent, oldNote.createdDate, currentDate, colorPosition)
+                } else {
+                    note = Note(null, title, noteContent, formatter.format(Date()),currentDate, colorPosition)
                 }
-                var intent = Intent()
+
+                val intent = Intent()
                 intent.putExtra("note", note)
                 setResult(Activity.RESULT_OK, intent)
                 finish()
-            }else{
-                Toast.makeText(this@AddNoteActivity, "please enter some data", Toast.LENGTH_LONG).show()
+
+                colorPosition++
+                if (colorPosition > 6) {
+                    colorPosition = 1
+                }
+
+                sharedPreferences.edit().putInt("colorPosition", colorPosition).apply()
+            } else {
+                Toast.makeText(this@AddNoteActivity, "Please enter some data", Toast.LENGTH_LONG).show()
                 return@setOnClickListener
             }
         }
@@ -66,9 +80,8 @@ class AddNoteActivity : AppCompatActivity() {
             finish()
         }
         binding.backBTN.setOnClickListener {
-            onBackPressed()
+            onBackPressedDispatcher.onBackPressed()
         }
-
 
     }
 

@@ -22,13 +22,24 @@ interface NoteDao {
 
     @Query("SELECT * FROM notes WHERE isInRecycleBin = 0")
     fun getNonRecycledItems(): LiveData<List<Note>>
+
     @Query("SELECT * FROM notes WHERE isInRecycleBin = 1")
     fun getDeletedNote(): LiveData<List<Note>>
 
-    @Query("UPDATE notes set title = :title, note = :content where id = :id")
-    fun update(id: Int?, title: String?, content: String?)
+    @Query("UPDATE notes set title = :title, note = :content,updated_date = :updatedDate where id = :id")
+    fun update(id: Int?, title: String?, content: String?, updatedDate: String?)
+
     @Query("DELETE FROM notes WHERE id IN (:noteIds)")
     fun deleteAll(noteIds: List<Int>)
+
+    @Query("UPDATE notes SET isInRecycleBin = 0 WHERE id = :noteId")
+    fun restoreAll(noteId: Int)
+    @Transaction
+    fun restoreAll(noteIds: List<Int>) {
+        for (noteId in noteIds) {
+            restoreAll(noteId)
+        }
+    }
 
     @Query("UPDATE notes SET isInRecycleBin = 1 WHERE id = :noteId")
     fun tempDelete(noteId: Int)

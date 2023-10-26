@@ -2,14 +2,20 @@ package com.example.notes_app_roomdb
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.PopupWindow
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.ActionBarDrawerToggle
@@ -22,7 +28,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.notes_app_roomdb.adaptors.NoteAdapter
 import com.example.notes_app_roomdb.database.Note
 import com.example.notes_app_roomdb.database.NoteDatabase
+import com.example.notes_app_roomdb.database.SortingPreference
 import com.example.notes_app_roomdb.databinding.ActivityMainBinding
+import com.example.notes_app_roomdb.databinding.CustomPopupMenuBinding
 import com.example.notes_app_roomdb.models.NoteViewModel
 import com.google.android.material.navigation.NavigationView
 
@@ -30,18 +38,25 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var database: NoteDatabase
+    private lateinit var noteList: List<Note>
     private lateinit var viewModel: NoteViewModel
     private lateinit var adapter: NoteAdapter
     private var searchVisible = false
+    private lateinit var popupWindow: PopupWindow
+    private lateinit var cpbinding: CustomPopupMenuBinding
+
+    private var currentSortingPreference: SortingPreference = SortingPreference.DATE_DESCENDING
+
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        cpbinding = CustomPopupMenuBinding.inflate(layoutInflater)
+
         setContentView(binding.root)
         setNavigationBarColor(R.color.nav_color)
 
-//        setSupportActionBar(binding.toolbar)
         binding.navView.setNavigationItemSelectedListener(this)
         val toggle = ActionBarDrawerToggle(this, binding.drawerLayout, R.string.open_nav, R.string.close_nav)
         binding.drawerLayout.addDrawerListener(toggle)
@@ -65,11 +80,13 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
             searchVisible = !searchVisible
             if (searchVisible) {
                 binding.searchBar.visibility = View.VISIBLE
+                binding.filterButton.visibility = View.INVISIBLE
                 binding.noteTV.visibility = View.INVISIBLE
                 binding.searchBTN.visibility = View.INVISIBLE
                 binding.searchBar.isIconified = false
             } else {
                 binding.searchBar.visibility = View.INVISIBLE
+                binding.filterButton.visibility = View.VISIBLE
                 binding.noteTV.visibility = View.VISIBLE
                 binding.searchBar.setQuery("", false)
                 binding.searchBTN.visibility = View.VISIBLE
@@ -78,11 +95,63 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
 
         binding.searchBTN.setOnClickListener {
             toggleSearchVisibility()
-
         }
 
         binding.deleteButton.setOnClickListener {
             deleteSelectedNotes()
+        }
+
+        popupWindow = PopupWindow(
+            cpbinding.root,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
+        val popup = PopupWindow(this)
+        popup.setBackgroundDrawable( ColorDrawable(
+            Color.TRANSPARENT)
+        )
+        popup.contentView = cpbinding.root
+        popup.isOutsideTouchable = true
+        popup.isFocusable = true
+        val xOffset = dpToPx(10)
+        val yOffset = dpToPx(10)
+
+        binding.filterButton.setOnClickListener{
+            popup.showAsDropDown(binding.filterButton,xOffset,yOffset)
+        }
+        cpbinding.radioButtonOption1.setOnClickListener{
+            cpbinding.rA.isChecked = true
+            cpbinding.rB.isChecked = false
+            cpbinding.rC.isChecked = false
+            cpbinding.rD.isChecked = false
+            sortByDateAscending()
+            popupWindow.dismiss()
+        }
+
+        cpbinding.radioButtonOption2.setOnClickListener{
+            cpbinding.rA.isChecked = false
+            cpbinding.rB.isChecked = true
+            cpbinding.rC.isChecked = false
+            cpbinding.rD.isChecked = false
+            sortByDateDescending()
+            popupWindow.dismiss()
+        }
+        cpbinding.radioButtonOption3.setOnClickListener{
+            cpbinding.rA.isChecked = false
+            cpbinding.rB.isChecked = false
+            cpbinding.rC.isChecked = true
+            cpbinding.rD.isChecked = false
+            sortByTitle()
+            popupWindow.dismiss()
+        }
+        cpbinding.radioButtonOption4.setOnClickListener{
+            cpbinding.rA.isChecked = false
+            cpbinding.rB.isChecked = false
+            cpbinding.rC.isChecked = false
+            cpbinding.rD.isChecked = true
+            sortByContent()
+            popupWindow.dismiss()
         }
 
         binding.drawerLayout.setOnTouchListener { _, event ->
@@ -127,22 +196,58 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
 
         viewModel.filterNote.observe(this){
             list-> list?.let {
-                adapter.updateList(list)
+                noteList = list
+                adapter.updateList(noteList)
+                applySorting()
         }
 
         }
         database = NoteDatabase.getDatabase(this)
 
-        viewModel.allNote.observe(this, Observer { notes ->
+        viewModel.filterNote.observe(this, Observer { notes ->
             if (notes.isNullOrEmpty()) {
                 binding.noNoteTV.visibility = View.VISIBLE
                 binding.noNoteIMG.visibility = View.VISIBLE
+                binding.filterButton.visibility = View.INVISIBLE
+                binding.searchBTN.visibility = View.INVISIBLE
             } else {
                 binding.noNoteTV.visibility = View.INVISIBLE
-                binding.noNoteIMG.visibility = View.INVISIBLE            }
+                binding.noNoteIMG.visibility = View.INVISIBLE
+                binding.filterButton.visibility = View.VISIBLE
+                binding.searchBTN.visibility = View.VISIBLE
+            }
         })
 
         onLongPress(adapter.isLongClick)
+    }
+
+    private fun sortByDateAscending() {
+        currentSortingPreference = SortingPreference.DATE_ASCENDING
+        applySorting()
+    }
+
+    private fun sortByDateDescending() {
+        currentSortingPreference = SortingPreference.DATE_DESCENDING
+        applySorting()
+    }
+
+    private fun sortByTitle() {
+        currentSortingPreference = SortingPreference.TITLE
+        applySorting()
+    }
+
+    private fun sortByContent() {
+        currentSortingPreference = SortingPreference.CONTENT
+        applySorting()
+    }
+    private fun applySorting() {
+        noteList = when (currentSortingPreference) {
+            SortingPreference.DATE_ASCENDING -> noteList.sortedBy { it.updatedDate }
+            SortingPreference.DATE_DESCENDING -> noteList.sortedByDescending { it.updatedDate }
+            SortingPreference.TITLE -> noteList.sortedBy { it.title }
+            SortingPreference.CONTENT -> noteList.sortedBy { it.content }
+        }
+        adapter.updateList(noteList)
     }
 
     private fun deleteSelectedNotes() {
@@ -157,7 +262,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
     }
 
     private fun filterNotes(query: String?) {
-        viewModel.allNote.observe(this) { list ->
+        viewModel.filterNote.observe(this) { list ->
             list?.let {
                 if (query.isNullOrBlank()) {
                     adapter.updateList(list)
@@ -167,6 +272,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
                                 note.title?.contains(query, ignoreCase = true) == true
                     }
                     adapter.updateList(filteredList)
+                    binding.filterButton.visibility = View.INVISIBLE
                 }
             }
         }
@@ -218,10 +324,12 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
     override fun onLongPress(longPress: Boolean) {
         if(longPress){
             binding.deleteButton.visibility = View.VISIBLE
+            binding.filterButton.visibility = View.INVISIBLE
             binding.searchBTN.visibility = View.INVISIBLE
         }else{
             binding.deleteButton.visibility = View.INVISIBLE
             binding.searchBTN.visibility = View.VISIBLE
+            binding.filterButton.visibility = View.VISIBLE
         }
     }
 
@@ -244,6 +352,9 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         binding.drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
-
+    fun dpToPx(dp: Int): Int {
+        val scale = resources.displayMetrics.density
+        return (dp * scale + 0.5f).toInt()
+    }
 
 }

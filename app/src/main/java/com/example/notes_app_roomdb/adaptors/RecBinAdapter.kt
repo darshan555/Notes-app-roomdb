@@ -8,6 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.notes_app_roomdb.R
 import com.example.notes_app_roomdb.database.Note
 import com.example.notes_app_roomdb.databinding.ListItemBinding
+import java.text.SimpleDateFormat
+import java.util.Calendar
 
 class RecBinAdapter(private val deleteIconChangeCallback : NoteAdapter.DeleteIconChange)
     : RecyclerView.Adapter<RecBinAdapter.ViewHolder>(){
@@ -32,21 +34,41 @@ class RecBinAdapter(private val deleteIconChangeCallback : NoteAdapter.DeleteIco
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val item = noteList[position]
-        Log.d("ItemS",item.title.toString()+item.content.toString()+item.id.toString())
-        val colorIndex = position % backgroundColors.size
+        val colorIndex = item.color-1
 
         holder.binding.cardLayout.setCardBackgroundColor(holder.itemView.getResources().getColor(backgroundColors[colorIndex],null))
         holder.binding.titleTV.text = item.title
         holder.binding.titleTV.isSelected = true
         holder.binding.contentTV.text = item.content
-        holder.binding.dateTV.text = item.date
         holder.binding.dateTV.isSelected = true
+
+        // Date-timing formatting
+        val formatter = SimpleDateFormat("hh:mm a")
+        val today = Calendar.getInstance()
+        val updatedDate = Calendar.getInstance()
+        val datePattern = SimpleDateFormat("EEE, d MMM yyyy HH:mm:ss a")
+        val parsedDate = datePattern.parse(item.updatedDate)
+        updatedDate.time = parsedDate
+
+        val dateTextView = holder.binding.dateTV
+
+        if (today.get(Calendar.YEAR) == updatedDate.get(Calendar.YEAR) &&
+            today.get(Calendar.DAY_OF_YEAR) == updatedDate.get(Calendar.DAY_OF_YEAR)
+        ) {
+            val formattedDate = formatter.format(parsedDate)
+            dateTextView.text = formattedDate
+        } else {
+            val dateFormat = SimpleDateFormat("MMM dd, yyyy")
+            val formattedDate = dateFormat.format(parsedDate)
+            dateTextView.text = formattedDate
+        }
 
         if (item.selected) {
             holder.binding.checkBTN.visibility = View.VISIBLE
         }else{
             holder.binding.checkBTN.visibility = View.INVISIBLE
         }
+
 
         holder.binding.cardLayout.setOnClickListener {
             if (isLongClick) {
@@ -89,11 +111,11 @@ class RecBinAdapter(private val deleteIconChangeCallback : NoteAdapter.DeleteIco
     }
 
     inner class ViewHolder(val binding: ListItemBinding) : RecyclerView.ViewHolder(binding.root)
-    interface DeleteIconChange {
+    /*interface DeleteIconChange {
         fun onLongPress(longPress: Boolean)
     }
     interface NoteClickListener {
         fun onItemClicked(note: Note)
-    }
+    }*/
 
 }

@@ -18,12 +18,15 @@ class NoteRepository(private val noteDao: NoteDao) {
     fun deleteNotes(noteIds: List<Int>) {
         noteDao.deleteAll(noteIds)
     }
+    fun restoreNotes(noteIds: List<Int>) {
+        noteDao.restoreAll(noteIds)
+    }
     fun tempDelete(noteIds: List<Int>) {
         noteDao.tempDelete(noteIds)
     }
 
      fun update(note: Note) {
-        noteDao.update(note.id, note.title, note.content)
+        noteDao.update(note.id, note.title, note.content,note.updatedDate)
     }
 
 

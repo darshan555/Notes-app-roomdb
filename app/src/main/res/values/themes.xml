@@ -2,6 +2,8 @@
     <style name="Base.Theme.Notes_App_Roomdb" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@color/nav_color</item>
     </style>
-
+    <style name="SearchViewStyle" parent="Widget.AppCompat.SearchView">
+        <item name="android:textColorHint">#fff</item>
+    </style>
     <style name="Theme.Notes_App_Roomdb" parent="Base.Theme.Notes_App_Roomdb" />
 </resources>

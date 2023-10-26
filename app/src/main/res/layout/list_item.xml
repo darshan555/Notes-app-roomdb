@@ -56,6 +56,7 @@
             android:layout_marginTop="5dp"
             android:textColor="@color/black"
             android:text="Date"
+            android:gravity="right"
             android:textSize="14sp" />
     </LinearLayout>
 
