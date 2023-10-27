@@ -2,16 +2,19 @@ package com.example.notes_app_roomdb
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.view.Gravity
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.Window
 import android.view.inputmethod.InputMethodManager
 import android.widget.PopupWindow
 import android.widget.Toast
@@ -28,6 +31,7 @@ import com.example.notes_app_roomdb.database.Note
 import com.example.notes_app_roomdb.database.NoteDatabase
 import com.example.notes_app_roomdb.database.SortingPreference
 import com.example.notes_app_roomdb.databinding.ActivityMainBinding
+import com.example.notes_app_roomdb.databinding.CustomDeleteDialogBinding
 import com.example.notes_app_roomdb.databinding.CustomPopupMenuBinding
 import com.example.notes_app_roomdb.models.NoteViewModel
 import com.google.android.material.navigation.NavigationView
@@ -42,6 +46,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
     private var searchVisible = false
     private lateinit var popupWindow: PopupWindow
     private lateinit var cpbinding: CustomPopupMenuBinding
+    private lateinit var dbbinding: CustomDeleteDialogBinding
 
     private var currentSortingPreference: SortingPreference = SortingPreference.DATE_DESCENDING
 
@@ -51,7 +56,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         cpbinding = CustomPopupMenuBinding.inflate(layoutInflater)
-
+        dbbinding = CustomDeleteDialogBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setNavigationBarColor(R.color.nav_color)
 
@@ -76,13 +81,13 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         binding.searchBTN.visibility = View.VISIBLE
 
 
-
         binding.searchBTN.setOnClickListener {
             toggleSearchVisibility()
         }
 
         binding.deleteButton.setOnClickListener {
-            deleteSelectedNotes()
+            val message :String? = "Are you sure want to delete?"
+            showCustomDialogDelete(message)
         }
 
         popupWindow = PopupWindow(
@@ -98,14 +103,13 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         popup.contentView = cpbinding.root
         popup.isOutsideTouchable = true
         popup.isFocusable = true
-        val xOffset = dpToPx(10)
-        val yOffset = dpToPx(10)
+
 
         binding.filterButton.setOnClickListener{
-            popup.showAsDropDown(binding.filterButton,xOffset,yOffset)
+            popup.showAsDropDown(binding.filterButton,25,50,Gravity.RIGHT)
         }
 
-
+        cpbinding.rB.isChecked = true
         cpbinding.radioButtonOption1.setOnClickListener{
             cpbinding.rA.isChecked = true
             cpbinding.rB.isChecked = false
@@ -191,22 +195,49 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         }
         database = NoteDatabase.getDatabase(this)
 
-        viewModel.filterNote.observe(this) { notes ->
-            if (notes.isNullOrEmpty()) {
-                binding.noNoteTV.visibility = View.VISIBLE
-                binding.noNoteIMG.visibility = View.VISIBLE
-                binding.filterButton.visibility = View.INVISIBLE
-                binding.searchBTN.visibility = View.INVISIBLE
-            } else {
-                binding.noNoteTV.visibility = View.INVISIBLE
-                binding.noNoteIMG.visibility = View.INVISIBLE
-                binding.filterButton.visibility = View.VISIBLE
-                binding.searchBTN.visibility = View.VISIBLE
-            }
-        }
+        uiViewCheck()
 
         onLongPress(adapter.isLongClick)
     }
+
+    private fun showCustomDialogDelete(message: String?) {
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setCancelable(false)
+
+        // Inflate the custom dialog layout
+        val dialogBinding = CustomDeleteDialogBinding.inflate(layoutInflater)
+        val dialogView = dialogBinding.root
+
+        // Set the content view of the dialog
+        dialog.setContentView(dialogView)
+
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        // Now, you can access views from dialogBinding
+        dialogBinding.messageTV.text = message
+
+        dialogBinding.yesBTN.setOnClickListener {
+            if (::adapter.isInitialized) {
+                val selectedNote = ArrayList(adapter.selectedNotes)
+                viewModel.temporaryDelete(selectedNote.map { it.id ?: -1 })
+                adapter.selectedNotes.clear()
+                adapter.notifyDataSetChanged()
+                onLongPress(false)
+            }
+            dialog.dismiss()
+        }
+
+        dialogBinding.noBTN.setOnClickListener {
+            adapter.selectedNotes.clear()
+            adapter.notifyDataSetChanged()
+            onLongPress(false)
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
+
     private fun toggleSearchVisibility() {
         searchVisible = !searchVisible
         if (searchVisible) {
@@ -252,16 +283,6 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         adapter.updateList(noteList)
     }
 
-    private fun deleteSelectedNotes() {
-        if(::adapter.isInitialized){
-            val selectedNote = ArrayList(adapter.selectedNotes)
-            viewModel.temporaryDelete(selectedNote.map { it.id?:-1 })
-            adapter.selectedNotes.clear()
-            adapter.notifyDataSetChanged()
-            onLongPress(false)
-        }
-    }
-
     private fun filterNotes(query: String?) {
         viewModel.filterNote.observe(this) { list ->
             list?.let {
@@ -304,6 +325,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
             getContent.launch(intent)
             adapter.selectedNotes.clear()
             onLongPress(false)
+            uiViewCheck()
             adapter.isLongClick = false
             adapter.notifyDataSetChanged()
         }
@@ -347,12 +369,15 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when(item.itemId){
             R.id.nav_home->{
+                item.isCheckable =false
                 Toast.makeText(this, "Home Activity", Toast.LENGTH_SHORT).show()
             }
             R.id.nav_about->{
+                item.isCheckable =false
                 Toast.makeText(this, "About", Toast.LENGTH_SHORT).show()
             }
             R.id.nav_recycle_bin->{
+                item.isCheckable =false
                 startActivity(Intent(this, RecycleBinActivity::class.java))
                 adapter.selectedNotes.clear()
                 onLongPress(false)
@@ -363,9 +388,20 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         binding.drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
-    private fun dpToPx(dp: Int): Int {
-        val scale = resources.displayMetrics.density
-        return (dp * scale + 0.5f).toInt()
-    }
+     private fun uiViewCheck(){
+         viewModel.filterNote.observe(this) { notes ->
+             if (notes.isNullOrEmpty()) {
+                 binding.noNoteTV.visibility = View.VISIBLE
+                 binding.noNoteIMG.visibility = View.VISIBLE
+                 binding.filterButton.visibility = View.INVISIBLE
+                 binding.searchBTN.visibility = View.INVISIBLE
+             } else {
+                 binding.noNoteTV.visibility = View.INVISIBLE
+                 binding.noNoteIMG.visibility = View.INVISIBLE
+                 binding.filterButton.visibility = View.VISIBLE
+                 binding.searchBTN.visibility = View.VISIBLE
+             }
+         }
+     }
 
 }

@@ -36,12 +36,24 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="12dp"
                 android:fontFamily="@font/baloo_paaji_2_medium"
-                android:text="Recycle View"
+                android:text="Recycle Bin"
                 android:textColor="@color/white"
                 android:textSize="30sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/backBTN"
                 app:layout_constraintTop_toTopOf="parent"
+                tools:visibility="gone" />
+
+            <Button
+                android:id="@+id/selectAllBTN"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/selectall_button_background"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/restoreButton"
+                app:layout_constraintTop_toTopOf="@+id/restoreButton"
+                app:layout_constraintVertical_bias="0.0"
                 tools:visibility="visible" />
 
             <Button
