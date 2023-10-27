@@ -42,14 +42,13 @@
 
                 <androidx.appcompat.widget.SearchView
                     android:id="@+id/search_bar"
-                    android:layout_width="230dp"
+                    android:layout_width="250dp"
                     android:layout_height="40dp"
                     android:background="@drawable/search_background"
                     app:iconifiedByDefault="true"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintHorizontal_bias="0.386"
-                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/searchBTN"
+                    app:layout_constraintStart_toEndOf="@+id/drawerBTN"
                     app:layout_constraintTop_toTopOf="parent"
                     app:queryHint="Search"
                     tools:visibility="visible" />
@@ -86,7 +85,7 @@
                     app:layout_constraintEnd_toStartOf="@+id/searchBTN"
                     app:layout_constraintTop_toTopOf="@+id/searchBTN"
                     app:layout_constraintVertical_bias="0.0"
-                    tools:visibility="visible" />
+                    tools:visibility="gone" />
 
                 <ImageView
                     android:id="@+id/drawerBTN"

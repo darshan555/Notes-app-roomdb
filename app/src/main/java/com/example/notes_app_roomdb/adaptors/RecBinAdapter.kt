@@ -63,7 +63,7 @@ class RecBinAdapter(private val deleteIconChangeCallback : NoteAdapter.DeleteIco
             dateTextView.text = formattedDate
         }
 
-        if (item.selected) {
+        if (selectedNotes.contains(item)) {
             holder.binding.checkBTN.visibility = View.VISIBLE
         }else{
             holder.binding.checkBTN.visibility = View.INVISIBLE
@@ -74,7 +74,6 @@ class RecBinAdapter(private val deleteIconChangeCallback : NoteAdapter.DeleteIco
             if (isLongClick) {
                 if (selectedNotes.contains(item)) {
                     selectedNotes.remove(item)
-                    item.selected = false
                     holder.binding.checkBTN.visibility = View.INVISIBLE
                     if (selectedNotes.isEmpty()) {
                         isLongClick = false
@@ -82,7 +81,6 @@ class RecBinAdapter(private val deleteIconChangeCallback : NoteAdapter.DeleteIco
                     }
                     notifyDataSetChanged()
                 } else {
-                    item.selected = true
                     selectedNotes.add(item)
                     holder.binding.checkBTN.visibility = View.VISIBLE
                     notifyDataSetChanged()
@@ -90,7 +88,6 @@ class RecBinAdapter(private val deleteIconChangeCallback : NoteAdapter.DeleteIco
             }
         }
         holder.binding.cardLayout.setOnLongClickListener {
-            item.selected = true
             selectedNotes.add(item)
             isLongClick = true
             holder.binding.checkBTN.visibility = View.VISIBLE

@@ -2,14 +2,12 @@ package com.example.notes_app_roomdb
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.View
@@ -64,9 +62,9 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         initUI()
         binding.navView.setBackgroundColor(ContextCompat.getColor(this,R.color.nav_color))
 
-        binding.drawerBTN.setOnClickListener{v
-            ->
-            if(binding.drawerLayout.isDrawerOpen(GravityCompat.START)){
+        binding.drawerBTN.setOnClickListener{
+
+        if(binding.drawerLayout.isDrawerOpen(GravityCompat.START)){
                     binding.drawerLayout.closeDrawer(GravityCompat.START)
             }else{
                 binding.drawerLayout.openDrawer(GravityCompat.START)
@@ -76,22 +74,8 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         binding.searchBar.visibility = View.INVISIBLE
         binding.noteTV.visibility = View.VISIBLE
         binding.searchBTN.visibility = View.VISIBLE
-        fun toggleSearchVisibility() {
-            searchVisible = !searchVisible
-            if (searchVisible) {
-                binding.searchBar.visibility = View.VISIBLE
-                binding.filterButton.visibility = View.INVISIBLE
-                binding.noteTV.visibility = View.INVISIBLE
-                binding.searchBTN.visibility = View.INVISIBLE
-                binding.searchBar.isIconified = false
-            } else {
-                binding.searchBar.visibility = View.INVISIBLE
-                binding.filterButton.visibility = View.VISIBLE
-                binding.noteTV.visibility = View.VISIBLE
-                binding.searchBar.setQuery("", false)
-                binding.searchBTN.visibility = View.VISIBLE
-            }
-        }
+
+
 
         binding.searchBTN.setOnClickListener {
             toggleSearchVisibility()
@@ -120,13 +104,15 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         binding.filterButton.setOnClickListener{
             popup.showAsDropDown(binding.filterButton,xOffset,yOffset)
         }
+
+
         cpbinding.radioButtonOption1.setOnClickListener{
             cpbinding.rA.isChecked = true
             cpbinding.rB.isChecked = false
             cpbinding.rC.isChecked = false
             cpbinding.rD.isChecked = false
+            popup.dismiss()
             sortByDateAscending()
-            popupWindow.dismiss()
         }
 
         cpbinding.radioButtonOption2.setOnClickListener{
@@ -134,25 +120,26 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
             cpbinding.rB.isChecked = true
             cpbinding.rC.isChecked = false
             cpbinding.rD.isChecked = false
+            popup.dismiss()
             sortByDateDescending()
-            popupWindow.dismiss()
         }
         cpbinding.radioButtonOption3.setOnClickListener{
             cpbinding.rA.isChecked = false
             cpbinding.rB.isChecked = false
             cpbinding.rC.isChecked = true
             cpbinding.rD.isChecked = false
+            popup.dismiss()
             sortByTitle()
-            popupWindow.dismiss()
         }
         cpbinding.radioButtonOption4.setOnClickListener{
             cpbinding.rA.isChecked = false
             cpbinding.rB.isChecked = false
             cpbinding.rC.isChecked = false
             cpbinding.rD.isChecked = true
+            popup.dismiss()
             sortByContent()
-            popupWindow.dismiss()
         }
+
 
         binding.drawerLayout.setOnTouchListener { _, event ->
             if (searchVisible && event.action == MotionEvent.ACTION_DOWN) {
@@ -204,7 +191,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         }
         database = NoteDatabase.getDatabase(this)
 
-        viewModel.filterNote.observe(this, Observer { notes ->
+        viewModel.filterNote.observe(this) { notes ->
             if (notes.isNullOrEmpty()) {
                 binding.noNoteTV.visibility = View.VISIBLE
                 binding.noNoteIMG.visibility = View.VISIBLE
@@ -216,11 +203,26 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
                 binding.filterButton.visibility = View.VISIBLE
                 binding.searchBTN.visibility = View.VISIBLE
             }
-        })
+        }
 
         onLongPress(adapter.isLongClick)
     }
-
+    private fun toggleSearchVisibility() {
+        searchVisible = !searchVisible
+        if (searchVisible) {
+            binding.searchBar.visibility = View.VISIBLE
+            binding.filterButton.visibility = View.INVISIBLE
+            binding.noteTV.visibility = View.INVISIBLE
+            binding.searchBTN.visibility = View.INVISIBLE
+            binding.searchBar.isIconified = false
+        } else {
+            binding.searchBar.visibility = View.INVISIBLE
+            binding.filterButton.visibility = View.VISIBLE
+            binding.noteTV.visibility = View.VISIBLE
+            binding.searchBar.setQuery("", false)
+            binding.searchBTN.visibility = View.VISIBLE
+        }
+    }
     private fun sortByDateAscending() {
         currentSortingPreference = SortingPreference.DATE_ASCENDING
         applySorting()
@@ -256,8 +258,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
             viewModel.temporaryDelete(selectedNote.map { it.id?:-1 })
             adapter.selectedNotes.clear()
             adapter.notifyDataSetChanged()
-            adapter.isLongClick = false
-            onLongPress(adapter.isLongClick)
+            onLongPress(false)
         }
     }
 
@@ -281,7 +282,7 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
     private fun initUI() {
         binding.listRecView.setHasFixedSize(true)
         binding.listRecView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
-        adapter = NoteAdapter(this,this,this) {
+        adapter = NoteAdapter(this) {
             val intent = Intent(this@MainActivity, AddNoteActivity::class.java)
             intent.putExtra("current_note", it)
             updateOrDeleteNote.launch(intent)
@@ -301,6 +302,10 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
         binding.addNoteBTN.setOnClickListener{
             val intent = Intent(this, AddNoteActivity::class.java)
             getContent.launch(intent)
+            adapter.selectedNotes.clear()
+            onLongPress(false)
+            adapter.isLongClick = false
+            adapter.notifyDataSetChanged()
         }
     }
     private val updateOrDeleteNote =
@@ -323,13 +328,15 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
 
     override fun onLongPress(longPress: Boolean) {
         if(longPress){
-            binding.deleteButton.visibility = View.VISIBLE
-            binding.filterButton.visibility = View.INVISIBLE
             binding.searchBTN.visibility = View.INVISIBLE
+            binding.deleteButton.visibility = View.VISIBLE
         }else{
             binding.deleteButton.visibility = View.INVISIBLE
-            binding.searchBTN.visibility = View.VISIBLE
-            binding.filterButton.visibility = View.VISIBLE
+            if(searchVisible){
+                binding.searchBTN.visibility = View.INVISIBLE
+            }else{
+                binding.searchBTN.visibility = View.VISIBLE
+            }
         }
     }
 
@@ -347,12 +354,16 @@ class MainActivity : AppCompatActivity(),NoteAdapter.NoteClickListener,NoteAdapt
             }
             R.id.nav_recycle_bin->{
                 startActivity(Intent(this, RecycleBinActivity::class.java))
+                adapter.selectedNotes.clear()
+                onLongPress(false)
+                adapter.isLongClick = false
+                adapter.notifyDataSetChanged()
             }
         }
         binding.drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
-    fun dpToPx(dp: Int): Int {
+    private fun dpToPx(dp: Int): Int {
         val scale = resources.displayMetrics.density
         return (dp * scale + 0.5f).toInt()
     }

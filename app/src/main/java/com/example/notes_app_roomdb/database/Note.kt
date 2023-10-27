@@ -13,7 +13,6 @@ data class Note(
     @ColumnInfo(name = "updated_date") val updatedDate: String?,
     @ColumnInfo(name = "color") val color:Int,
 
-    var selected: Boolean = false,
     val isInRecycleBin: Boolean = false
 
 ):java.io.Serializable

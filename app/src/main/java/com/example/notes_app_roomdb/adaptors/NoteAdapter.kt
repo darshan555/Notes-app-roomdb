@@ -1,6 +1,5 @@
 package com.example.notes_app_roomdb.adaptors
 
-import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,10 +11,8 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 
 class NoteAdapter(
-    private val context: Context,
-    private val listener: NoteClickListener,
-    private val deleteIconChangeCallback : DeleteIconChange,
-    private val listener1 :(Note)->Unit
+    private val deleteIconChangeCallback: DeleteIconChange,
+    private val listener1: (Note) -> Unit
 ) :
     RecyclerView.Adapter<NoteAdapter.ViewHolder>() {
 
@@ -70,7 +67,8 @@ class NoteAdapter(
         }
 
         //Check visibility
-        if (item.selected) {
+
+        if (selectedNotes.contains(item)) {
             holder.binding.checkBTN.visibility = View.VISIBLE
         } else {
             holder.binding.checkBTN.visibility = View.INVISIBLE
@@ -82,17 +80,14 @@ class NoteAdapter(
                 if (selectedNotes.contains(item)) {
                     selectedNotes.remove(item)
                     holder.binding.checkBTN.visibility = View.INVISIBLE
-                    item.selected = false
                     if (selectedNotes.isEmpty()) {
                         isLongClick = false
                         deleteIconChangeCallback.onLongPress(isLongClick)
                     }
                     notifyDataSetChanged()
                 } else {
-                    item.selected = true
                     selectedNotes.add(item)
                     holder.binding.checkBTN.visibility = View.VISIBLE
-
                     notifyDataSetChanged()
                 }
             } else {
@@ -100,7 +95,6 @@ class NoteAdapter(
             }
         }
         holder.binding.cardLayout.setOnLongClickListener {
-            item.selected = true
             selectedNotes.add(item)
             isLongClick = true
             holder.binding.checkBTN.visibility = View.VISIBLE
